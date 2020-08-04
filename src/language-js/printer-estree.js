@@ -3854,19 +3854,19 @@ function printMethod(path, options, print) {
     printPropertyKey(path, options, print),
     node.optional || node.key.optional ? "?" : "",
     node === value
-      ? printMethodInternal(path, options, print)
-      : path.call((path) => printMethodInternal(path, options, print), "value")
+      ? printMethodInternal(path, options, print, kind === "constructor")
+      : path.call((path) => printMethodInternal(path, options, print, kind === "constructor"), "value")
   );
 
   return concat(parts);
 }
 
-function printMethodInternal(path, options, print) {
+function printMethodInternal(path, options, print, moreLines) {
   const parts = [
     printFunctionTypeParameters(path, options, print),
     group(
       concat([
-        printFunctionParams(path, print, options),
+        printFunctionParams(path, print, options, undefined, undefined, moreLines),
         printReturnType(path, print, options),
       ])
     ),
@@ -4272,7 +4272,7 @@ function printFunctionTypeParameters(path, options, print) {
   return "";
 }
 
-function printFunctionParams(path, print, options, expandArg, printTypeParams) {
+function printFunctionParams(path, print, options, expandArg, printTypeParams, moreLines) {
   const fun = path.getValue();
   const parent = path.getParentNode();
   const paramsField = fun.parameters ? "parameters" : "params";
@@ -4308,6 +4308,8 @@ function printFunctionParams(path, print, options, expandArg, printTypeParams) {
         parts.push(", ");
       } else if (isNextLineEmpty(options.originalText, param, options.locEnd)) {
         parts.push(",", hardline, hardline);
+      } else if (moreLines) {
+        parts.push(",", hardline);
       } else {
         parts.push(",", line);
       }
